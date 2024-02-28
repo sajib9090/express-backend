@@ -85,5 +85,54 @@ UserSchema.statics.signup = async function (
   return user;
 };
 
+// static signIn method
+UserSchema.statics.signIn = async function (username, password) {
+  if (!username || !password) {
+    throw createError(400, "username & password is required");
+  }
+
+  if (username.length < 3) {
+    throw createError(400, "username must be at least 3 characters long");
+  }
+
+  if (typeof username !== "string") {
+    throw createError(400, "username must be a string");
+  }
+
+  if (username.length < 3) {
+    throw createError(400, "username must be at least 3 characters long");
+  }
+
+  if (/^\d/.test(username)) {
+    throw createError(400, "username cannot start with a number");
+  }
+
+  if (/^[^a-zA-Z0-9]/.test(username)) {
+    throw createError(400, "username cannot start with a special character");
+  }
+
+  const user = await this.findOne({ username });
+  if (!user) {
+    throw createError(404, "invalid username");
+  }
+
+  if (password.length < 6) {
+    throw createError(400, "password must be at least 6 characters long");
+  }
+
+  const matchPassword = await bcrypt.compare(password, user.password);
+  if (!matchPassword) {
+    throw createError.Unauthorized("incorrect password");
+  }
+
+  if (user.isBanned) {
+    throw createError.Unauthorized(
+      "you are banned. please contact with authority"
+    );
+  }
+
+  return user;
+};
+
 const User = model("User", UserSchema);
 export default User;
